@@ -30,7 +30,7 @@ The application is deployed on Streamlit Cloud and can be accessed here:
 
 1. Clone the repository:
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/your-username/ai-study-buddy.git
 cd ai-study-buddy
 ```
 
