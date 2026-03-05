@@ -17,7 +17,7 @@ if not api_key:
 client = genai.Client(api_key=api_key)
 
 # Model to use
-MODEL_ID = "gemini-3.1-pro-preview"
+MODEL_ID = "gemini-2.5-flash"
 
 def explain_concept(topic, difficulty):
     """Generate level-appropriate explanation"""
