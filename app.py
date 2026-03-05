@@ -226,7 +226,7 @@ with st.sidebar:
         st.rerun()
     
     st.markdown("""
-    <div style="background-color: black; padding: 10px; border-radius: 8px; margin: 10px 0; font-size: 0.85rem;">
+    <div style="background-color: white; color:black; padding: 10px; border-radius: 8px; margin: 10px 0; font-size: 0.85rem;">
         <strong>💡 Quick Tip:</strong> Use "New Chat" to start a fresh learning session with a new topic!
     </div>
     """, unsafe_allow_html=True)
