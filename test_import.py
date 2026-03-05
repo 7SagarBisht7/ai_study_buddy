@@ -14,7 +14,7 @@ if api_key:
     # Test a simple generation
     try:
         response = client.models.generate_content(
-            model='gemini-3.1-pro-preview',
+            model='gemini-2.5-flash',
             contents='Say hello in 5 words or less'
         )
         print(f"\n✅ Test successful!")
