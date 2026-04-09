@@ -216,6 +216,15 @@ st.markdown('<p class="sub-header">Your personal learning assistant for smarter 
 with st.sidebar:
     st.header("⚙️ Configuration")
     
+    # --- ADDED: GitHub Repo Link Button ---
+    st.link_button(
+        "💻 View Source on GitHub", 
+        "https://github.com/7SagarBisht7/ai_study_buddy",
+        use_container_width=True
+    )
+    st.divider()
+    # --------------------------------------
+    
     # New Chat Button at the top
     st.markdown("### 💬 Session Management")
     
@@ -545,7 +554,6 @@ with tab5:
         else:
             st.warning("Please enter content or upload a PDF first!")
 
-# Tab 6: Progress Tracking
 # Tab 6: Progress Tracking - Professional Dashboard
 with tab6:
     st.markdown('<p class="section-header">📊 Learning Performance Dashboard</p>', unsafe_allow_html=True)
