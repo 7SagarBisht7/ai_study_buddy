@@ -26,8 +26,8 @@ client = genai.Client(
 )
 
 # Model constants
-PRIMARY_MODEL = "gemini-2.5-flash"
-BACKUP_MODEL = "gemini-2.5-flash-lite"
+PRIMARY_MODEL = "gemini-2.5-flash-lite" 
+BACKUP_MODEL = "gemini-2.5-flash" # Use standard Flash as the backup
 
 def call_gemini_with_fallback(prompt):
     """
