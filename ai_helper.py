@@ -1,5 +1,6 @@
 from google import genai
 from google.genai import types
+from google.api_core import exceptions
 import os
 from dotenv import load_dotenv
 import json
@@ -13,11 +14,46 @@ api_key = os.getenv('GEMINI_API_KEY')
 if not api_key:
     raise ValueError("GEMINI_API_KEY not found in .env file!")
 
-# Initialize the client
-client = genai.Client(api_key=api_key)
+# Initialize the client with automatic retry options
+client = genai.Client(
+    api_key=api_key,
+    http_options=types.HttpOptions(
+        retry_options=types.HttpRetryOptions(
+            attempts=2,
+            initial_delay=2.0
+        )
+    )
+)
 
-# Model to use
-MODEL_ID = "gemini-2.5-flash"
+# Model constants
+PRIMARY_MODEL = "gemini-2.5-flash"
+BACKUP_MODEL = "gemini-2.5-flash-lite"
+
+def call_gemini_with_fallback(prompt):
+    """
+    Helper function to handle model switching.
+    If PRIMARY_MODEL fails due to quota or server load, it tries BACKUP_MODEL.
+    """
+    try:
+        # Attempt 1: Primary Model
+        response = client.models.generate_content(
+            model=PRIMARY_MODEL,
+            contents=prompt
+        )
+        return response.text
+    except (exceptions.ResourceExhausted, exceptions.ServiceUnavailable):
+        try:
+            # Attempt 2: Backup Model (Lite)
+            response = client.models.generate_content(
+                model=BACKUP_MODEL,
+                contents=prompt
+            )
+            # Add a small note so the user knows a fallback occurred
+            return response.text + "\n\n*(Note: Optimized via Lite model due to high server demand)*"
+        except Exception as fallback_error:
+            return f"Error: Both models are currently unavailable. {str(fallback_error)}"
+    except Exception as e:
+        return f"Error: {str(e)}"
 
 def explain_concept(topic, difficulty):
     """Generate level-appropriate explanation"""
@@ -40,14 +76,7 @@ Provide a clear, structured explanation with:
 
 Keep the explanation focused and educational."""
     
-    try:
-        response = client.models.generate_content(
-            model=MODEL_ID,
-            contents=prompt
-        )
-        return response.text
-    except Exception as e:
-        return f"Error generating explanation: {str(e)}"
+    return call_gemini_with_fallback(prompt)
 
 def summarize_content(content, difficulty):
     """Summarize text content based on difficulty level"""
@@ -67,14 +96,7 @@ Content:
 
 Provide the summary in a clear, organized format."""
     
-    try:
-        response = client.models.generate_content(
-            model=MODEL_ID,
-            contents=prompt
-        )
-        return response.text
-    except Exception as e:
-        return f"Error generating summary: {str(e)}"
+    return call_gemini_with_fallback(prompt)
 
 def generate_quiz(topic, difficulty, num_questions=5):
     """Generate quiz questions"""
@@ -107,13 +129,17 @@ Format your response as a JSON array with this structure:
 Make questions challenging but fair for the {difficulty.lower()} level.
 IMPORTANT: Return ONLY the JSON array, no other text."""
     
-    try:
-        response = client.models.generate_content(
-            model=MODEL_ID,
-            contents=prompt
-        )
-        text = response.text
+    text = call_gemini_with_fallback(prompt)
+    
+    if text.startswith("Error:"):
+        print(text)
+        return []
         
+    # Clean the fallback note if it exists before parsing JSON
+    if "*(Note:" in text:
+        text = text.split("*(Note:")[0].strip()
+        
+    try:
         # Clean the response text
         text = text.strip()
         if text.startswith('```json'):
@@ -158,13 +184,17 @@ Format as JSON:
 Make them helpful for {difficulty.lower()} level study.
 IMPORTANT: Return ONLY the JSON array, no other text."""
     
-    try:
-        response = client.models.generate_content(
-            model=MODEL_ID,
-            contents=prompt
-        )
-        text = response.text
+    text = call_gemini_with_fallback(prompt)
+    
+    if text.startswith("Error:"):
+        print(text)
+        return []
         
+    # Clean the fallback note if it exists before parsing JSON
+    if "*(Note:" in text:
+        text = text.split("*(Note:")[0].strip()
+        
+    try:
         # Clean the response text
         text = text.strip()
         if text.startswith('```json'):
@@ -204,11 +234,4 @@ Content:
 Format as a numbered list of the most important concepts, facts, or takeaways.
 Make them concise but informative for {difficulty.lower()} level understanding."""
     
-    try:
-        response = client.models.generate_content(
-            model=MODEL_ID,
-            contents=prompt
-        )
-        return response.text
-    except Exception as e:
-        return f"Error extracting key points: {str(e)}"
+    return call_gemini_with_fallback(prompt)
